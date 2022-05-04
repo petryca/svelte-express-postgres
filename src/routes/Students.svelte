@@ -16,8 +16,7 @@
     alert('Something went horribly wrong. See browser log.');
   }
 
-  async function getStudents() {
-
+  function getStudents() {
     const url = '/api/students/';
 
     fetch(url)
@@ -28,8 +27,7 @@
     .catch(catchError);
   }
 
-  async function insertStudent() {
-
+  function insertStudent() {
     if(newStudent === '') return alert('Type student name');
 
     const url = '/api/student/';
@@ -51,8 +49,7 @@
     .catch(catchError);
   }
 
-  async function deleteStudent(id) {
-
+  function deleteStudent(id) {
     if(!confirm('Are you sure?')) return;
 
     const url = '/api/student/' + id;
@@ -63,8 +60,7 @@
     .catch(catchError);
   }
 
-  async function updateStudent(id, i) {
-
+  function updateStudent(id, i) {
     if(students[i].newName === '') return alert('Type new name');
 
     const url = '/api/student/' + id;
