@@ -1,6 +1,6 @@
 # Svelte / Express / Postgres – Template
 
-Run `npm install` from a project directory.
+Run `npm install` from a project directory, then strat the dev server `npm run dev`.
 
 This setup uses the [svelte-spa-router](https://github.com/ItalyPaleAle/svelte-spa-router) for client side **hash-based routing**.
 
