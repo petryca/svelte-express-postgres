@@ -1,64 +1,89 @@
 <script>
   import { onMount } from 'svelte';
 
-  let  students = [];
+  let students = [];
   let newStudent = '';
 
-  async function getStudents() {
-    const url = '/api/students';
-    try {
-      const res = await fetch(url, {method: 'GET'});
-      students = await res.json();
-      for(const s of students) {
-        s.newName = '';
-      }
-    } catch (error) {
-      console.error(error);
+  function throwError(response) {
+    if (!response.ok) {
+      throw Error(response.statusText);
     }
+    return response;
+  }
+
+  function catchError(error) {
+    console.error(error);
+    alert('Something went horribly wrong. See browser log.');
+  }
+
+  async function getStudents() {
+
+    const url = '/api/students/';
+
+    fetch(url)
+    .then(throwError)
+    .then(response => response.json())
+    .then(data => students = data)
+    .then(() => {for (const s of students) s.newName = ''})
+    .catch(catchError);
   }
 
   async function insertStudent() {
+
+    if(newStudent === '') return alert('Type student name');
+
     const url = '/api/student/';
-    try {
-      await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({name:newStudent}),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+
+    const settings = {
+      method: 'POST',
+      body: JSON.stringify({name:newStudent}),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+
+    fetch(url, settings)
+    .then(throwError)
+    .then(() => {
       getStudents();
       newStudent = '';
-    } catch (error) {
-      console.error(error);
-    }
+    })
+    .catch(catchError);
   }
 
   async function deleteStudent(id) {
+
+    if(!confirm('Are you sure?')) return;
+
     const url = '/api/student/' + id;
-    try {
-      await fetch(url, {method: 'DELETE'});
-      getStudents();
-    } catch (error) {
-      console.error(error);
-    }
+
+    fetch(url, {method: 'DELETE'})
+    .then(throwError)
+    .then(() => getStudents())
+    .catch(catchError);
   }
 
   async function updateStudent(id, i) {
+
+    if(students[i].newName === '') return alert('Type new name');
+
     const url = '/api/student/' + id;
-    try {
-      await fetch(url, {
-        method: 'PATCH',
-        body: JSON.stringify({name:students[i].newName}),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+
+    const settings = {
+      method: 'PATCH',
+      body: JSON.stringify({name:students[i].newName}),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+
+    fetch(url, settings)
+    .then(throwError)
+    .then(() => {
       getStudents();
       students[i].newName = '';
-    } catch (error) {
-      console.error(error);
-    }
+    })
+    .catch(catchError);
   }
 
   onMount(getStudents);
@@ -72,23 +97,20 @@
   <ul>
   {#each students as student, i}
     <li>
-      <a href="#/student/{student.id}">{student.name}</a>
-      <form on:submit|preventDefault={() => updateStudent(student.id, i)}>
-        <input type="text" bind:value={students[i].newName} required>
-        <button type="submit">Update</button>
-      </form>
-      <button on:click={() => deleteStudent(student.id)}>Delete</button>
+      <input type="text" placeholder="{student.name}" bind:value={students[i].newName}>
+      <a href on:click|preventDefault={() => updateStudent(student.id, i)}>Update</a>
+      <a href="#/student/{student.id}">View</a>
+      <a href on:click|preventDefault={() => deleteStudent(student.id)}>Delete</a>
     </li>
   {:else}
-    <li><a href>There are no students</a></li>
+    <li>There are no students</li>
   {/each}
   </ul>
 
-  <form on:submit|preventDefault={insertStudent}>
-    <label for="name">New student</label>
-    <input id="name" type="text" bind:value={newStudent} required>
-    <button type="submit">Insert</button>
-  </form>
+  <div>
+    <input id="name" type="text" placeholder="Name" bind:value={newStudent}>
+    <a href on:click|preventDefault={insertStudent}>Insert</a>
+  </div>
 
 </main>
 
@@ -98,61 +120,48 @@ ul {
   margin: 0 0 2rem 0;
   padding: 0;
 }
-li {
+li, div {
+  border: 1px solid #ccc;
   margin-bottom: -1px;
   display: flex;
 }
 li:hover {
-  background-color: #eee;
+  background-color: #f3f3fb;
 }
-li > a {
+a {
   display: block;
-  width: 18rem;
   color: inherit;
   text-decoration: none;
-  padding: 0.8rem 1rem;
-  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-left: 1rem;
   margin-right: -1px;
+  text-align: center;
 }
-form {
-  flex-basis: 0;
-  flex-grow: 3;
-  display: flex;
+a:hover {
+  text-decoration: underline;
+  color: #2575e4;
 }
-label, input {
+a:last-child:hover {
+  color: #fa0a0a;
+}
+div > a:last-child:hover {
+  color: #06bc1e;
+}
+input {
   display: block;
   font: inherit;
   outline: none;
-}
-label {
-  border: 1px solid #ccc;
-  line-height: 1;
-  padding: 0.8rem;
-  margin-right: -1px;
-  width: 18rem;
-}
-input {
   padding: 0 0.8rem;
-  border: 1px solid #ccc;
+  border-width: 0;
   margin: 0;
   margin-right: -1px;
-  flex-basis: 0;
-  flex-grow: 1;
+  flex-basis: 100%;
+  flex-shrink: 1;
+  background-color: transparent;
+  color: #2575e4;
 }
-button {
-  cursor: pointer;
-  font: inherit;
-  padding: 0 2rem;
-  border: 1px solid #ccc;
-  background-color: #eee;
-  width: 9rem;
-  color: #555;
-  margin: 0;
-}
-li > form > button {
-  margin-right: -1px;
-}
-button:hover {
-  background-color: #ddd;
+input::placeholder {
+  color: black;
+  opacity: 1;
 }
 </style>
