@@ -19,12 +19,9 @@
   async function getStudents() {
     const url = '/api/students';
     try {
-      const res = await fetch(url, {method: 'GET'});
+      const res = await fetch(url);
       throwError(res);
       students = await res.json();
-      for(const s of students) {
-        s.newName = '';
-      }
     } catch (error) {
       catchError(error);
     }
