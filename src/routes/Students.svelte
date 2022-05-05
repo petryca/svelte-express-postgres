@@ -23,8 +23,6 @@
       const res = await fetch(url);
       throwError(res);
       students = await res.json();
-      // clone students into cache
-      // so we can compare before sending update
       cache = JSON.parse(JSON.stringify(students));
     } catch (error) {
       catchError(error);
@@ -38,9 +36,7 @@
       const res = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({name:newStudent}),
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: {'Content-Type': 'application/json'}
       });
       throwError(res);
       getStudents();
@@ -51,38 +47,38 @@
   }
 
   async function updateStudent(event, id, i) {
+    console.log(event);
     const url = '/api/student/' + id;
-    const form = document.getElementById('form');
+    let currentIndex = [...form].indexOf(event.target);
     let res;
 
     try {
+
       if (students[i].name === '') {
-        // delete a student
+
         res = await fetch(url, {method: 'DELETE'});
         throwError(res);
-        const index = [...form].indexOf(event.target);
         await getStudents();
-        form.elements[index].select();
+
       } else if (students[i].name !== cache[i].name) {
-        // compare students array to cache
-        // if they are diffrent run patch
+
         res = await fetch(url, {
           method: 'PATCH',
           body: JSON.stringify({name:students[i].name}),
-          headers: {
-            'Content-Type': 'application/json'
-          }
+          headers: {'Content-Type': 'application/json'}
         });
         throwError(res);
-        // get the index of selected form element + 1
-        const index = [...form].indexOf(event.target) + 1;
         await getStudents();
-        // select next element
-        form.elements[index].select();
+        currentIndex++;
+
       } else {
-        const index = [...form].indexOf(event.target) + 1;
-        form.elements[index].select();
+        currentIndex++;
       }
+
+      if (event.type === "keypress") {
+        form.elements[currentIndex].select();
+      }
+
     } catch (error) {
       catchError(error);
     }
@@ -100,9 +96,8 @@
     {#each students as student, i}
       <li>
         <input type="text" bind:value={student.name} 
-        on:keypress={(event) => {
-          if (event.key === 'Enter') updateStudent(event, student.id, i);
-        }}
+        on:keypress={e => e.key === 'Enter' && updateStudent(e, student.id, i)}
+        on:blur={e => updateStudent(e, student.id, i)}
         >
         <a href="#/student/{student.id}">View</a>
       </li>
@@ -111,9 +106,7 @@
     {/each}
       <li>
         <input id="name" type="text" placeholder="Name" bind:value={newStudent} 
-          on:keypress={(event) => {
-            if (event.key === 'Enter') insertStudent();
-          }}
+          on:keypress={e => e.key === 'Enter' && insertStudent()}
         >
       </li>
     </ul>
@@ -144,8 +137,9 @@ a {
   margin-left: 1rem;
   margin-right: -1px;
   text-align: center;
+  outline: none;
 }
-a:hover {
+a:hover, a:focus {
   text-decoration: underline;
   color: #2575e4;
 }
