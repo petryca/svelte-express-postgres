@@ -35,12 +35,11 @@
     if (newStudent === '') return;
     const url = '/api/student/';
     try {
-      const res = await fetch(url, {
+      throwError(await fetch(url, {
         method: 'POST',
         body: JSON.stringify({name:newStudent}),
         headers: {'Content-Type': 'application/json'}
-      });
-      throwError(res);
+      }));
       getStudents();
       newStudent = '';
     } catch (error) {
@@ -49,10 +48,8 @@
   }
 
   async function updateStudent(event, id, i) {
-    console.log(event);
     const url = '/api/student/' + id;
     let currentIndex = [...form].indexOf(event.target);
-    let res;
 
     try {
 
