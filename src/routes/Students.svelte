@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
 
   let students = [];
+  let cache = [];
   let newStudent = '';
 
   function throwError(response) {
@@ -22,13 +23,16 @@
       const res = await fetch(url);
       throwError(res);
       students = await res.json();
+      // clone students into cache
+      // so we can compare before sending update
+      cache = JSON.parse(JSON.stringify(students));
     } catch (error) {
       catchError(error);
     }
   }
 
   async function insertStudent() {
-    if(newStudent === '') return;
+    if (newStudent === '') return;
     const url = '/api/student/';
     try {
       const res = await fetch(url, {
@@ -49,14 +53,19 @@
   async function updateStudent(event, id, i) {
     const url = '/api/student/' + id;
     const form = document.getElementById('form');
-    let res, index;
+    let res;
 
     try {
-      if(students[i].name === '') {
+      if (students[i].name === '') {
+        // delete a student
         res = await fetch(url, {method: 'DELETE'});
         throwError(res);
-        index = [...form].indexOf(event.target);
-      } else {
+        const index = [...form].indexOf(event.target);
+        await getStudents();
+        form.elements[index].select();
+      } else if (students[i].name !== cache[i].name) {
+        // compare students array to cache
+        // if they are diffrent run patch
         res = await fetch(url, {
           method: 'PATCH',
           body: JSON.stringify({name:students[i].name}),
@@ -65,10 +74,15 @@
           }
         });
         throwError(res);
-        index = [...form].indexOf(event.target) + 1;
+        // get the index of selected form element + 1
+        const index = [...form].indexOf(event.target) + 1;
+        await getStudents();
+        // select next element
+        form.elements[index].select();
+      } else {
+        const index = [...form].indexOf(event.target) + 1;
+        form.elements[index].select();
       }
-      await getStudents();
-      form.elements[index].select();
     } catch (error) {
       catchError(error);
     }
