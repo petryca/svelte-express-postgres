@@ -16,70 +16,68 @@
     alert('Something went horribly wrong. See browser log.');
   }
 
-  function getStudents() {
-    const url = '/api/students/';
-
-    fetch(url)
-    .then(throwError)
-    .then(response => response.json())
-    .then(data => students = data)
-    .then(() => {for (const s of students) s.newName = ''})
-    .catch(catchError);
+  async function getStudents() {
+    const url = '/api/students';
+    try {
+      const res = await fetch(url, {method: 'GET'});
+      throwError(res);
+      students = await res.json();
+      for(const s of students) {
+        s.newName = '';
+      }
+    } catch (error) {
+      catchError(error);
+    }
   }
 
-  function insertStudent() {
+  async function insertStudent() {
     if(newStudent === '') return alert('Type student name');
-
     const url = '/api/student/';
-
-    const settings = {
-      method: 'POST',
-      body: JSON.stringify({name:newStudent}),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    };
-
-    fetch(url, settings)
-    .then(throwError)
-    .then(() => {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({name:newStudent}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      throwError(res);
       getStudents();
       newStudent = '';
-    })
-    .catch(catchError);
+    } catch (error) {
+      catchError(error);
+    }
   }
 
-  function deleteStudent(id) {
+  async function deleteStudent(id) {
     if(!confirm('Are you sure?')) return;
-
     const url = '/api/student/' + id;
-
-    fetch(url, {method: 'DELETE'})
-    .then(throwError)
-    .then(() => getStudents())
-    .catch(catchError);
+    try {
+      const res = await fetch(url, {method: 'DELETE'});
+      throwError(res);
+      getStudents();
+    } catch (error) {
+      catchError(error);
+    }
   }
 
-  function updateStudent(id, i) {
+  async function updateStudent(id, i) {
     if(students[i].newName === '') return alert('Type new name');
-
     const url = '/api/student/' + id;
-
-    const settings = {
-      method: 'PATCH',
-      body: JSON.stringify({name:students[i].newName}),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    };
-
-    fetch(url, settings)
-    .then(throwError)
-    .then(() => {
+    try {
+      const res = await fetch(url, {
+        method: 'PATCH',
+        body: JSON.stringify({name:students[i].newName}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      throwError(res);
       getStudents();
       students[i].newName = '';
-    })
-    .catch(catchError);
+    } catch (error) {
+      catchError(error);
+    }
   }
 
   onMount(getStudents);
@@ -99,7 +97,7 @@
       <a href on:click|preventDefault={() => deleteStudent(student.id)}>Delete</a>
     </li>
   {:else}
-    <li>There are no students</li>
+    <li class="no">There are no students</li>
   {/each}
   </ul>
 
@@ -159,5 +157,9 @@ input {
 input::placeholder {
   color: black;
   opacity: 1;
+}
+.no {
+  border-width: 0;
+  color: #fa0a0a;
 }
 </style>
