@@ -31,7 +31,7 @@
   }
 
   async function insertStudent() {
-    if(newStudent === '') return alert('Type student name');
+    if(newStudent === '') return;
     const url = '/api/student/';
     try {
       const res = await fetch(url, {
@@ -49,32 +49,32 @@
     }
   }
 
-  async function deleteStudent(id) {
-    if(!confirm('Are you sure?')) return;
+  async function updateStudent(event, id, i) {
     const url = '/api/student/' + id;
-    try {
-      const res = await fetch(url, {method: 'DELETE'});
-      throwError(res);
-      getStudents();
-    } catch (error) {
-      catchError(error);
-    }
-  }
+    const form = document.getElementById('form');
+    let res;
 
-  async function updateStudent(id, i) {
-    if(students[i].newName === '') return alert('Type new name');
-    const url = '/api/student/' + id;
     try {
-      const res = await fetch(url, {
-        method: 'PATCH',
-        body: JSON.stringify({name:students[i].newName}),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      throwError(res);
-      getStudents();
-      students[i].newName = '';
+      if(students[i].name === '') {
+        res = await fetch(url, {method: 'DELETE'});
+        throwError(res);
+        getStudents();
+      } else {
+        res = await fetch(url, {
+          method: 'PATCH',
+          body: JSON.stringify({name:students[i].name}),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        throwError(res);
+        const index = [...form].indexOf(event.target);
+        form.elements[index + 1].focus();
+        getStudents();
+      }
+      setTimeout(() => {
+        document.activeElement.select();
+      }, 100);
     } catch (error) {
       catchError(error);
     }
@@ -85,26 +85,31 @@
 </script>
 
 <main>
-
   <h2>{students.length} students</h2>
 
-  <ul>
-  {#each students as student, i}
-    <li>
-      <input type="text" placeholder="{student.name}" bind:value={students[i].newName}>
-      <a href on:click|preventDefault={() => updateStudent(student.id, i)}>Update</a>
-      <a href="#/student/{student.id}">View</a>
-      <a href on:click|preventDefault={() => deleteStudent(student.id)}>Delete</a>
-    </li>
-  {:else}
-    <li class="no">There are no students</li>
-  {/each}
-  </ul>
-
-  <div>
-    <input id="name" type="text" placeholder="Name" bind:value={newStudent}>
-    <a href on:click|preventDefault={insertStudent}>Insert</a>
-  </div>
+  <form id="form">
+    <ul>
+    {#each students as student, i}
+      <li>
+        <input type="text" bind:value={student.name} 
+        on:keypress={(event) => {
+          if (event.key === 'Enter') updateStudent(event, student.id, i);
+        }}
+        >
+        <a href="#/student/{student.id}">View</a>
+      </li>
+    {:else}
+      <li class="no">There are no students</li>
+    {/each}
+      <li>
+        <input id="name" type="text" placeholder="Name" bind:value={newStudent} 
+          on:keypress={(event) => {
+            if (event.key === 'Enter') insertStudent();
+          }}
+        >
+      </li>
+    </ul>
+  </form>
 
 </main>
 
@@ -114,10 +119,11 @@ ul {
   margin: 0 0 2rem 0;
   padding: 0;
 }
-li, div {
+li {
   border: 1px solid #ccc;
   margin-bottom: -1px;
   display: flex;
+  align-items: center;
 }
 li:hover {
   background-color: #f3f3fb;
@@ -135,31 +141,28 @@ a:hover {
   text-decoration: underline;
   color: #2575e4;
 }
-a:last-child:hover {
-  color: #fa0a0a;
-}
-div > a:last-child:hover {
-  color: #06bc1e;
-}
 input {
   display: block;
   font: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: #000;
   outline: none;
-  padding: 0 0.8rem;
+  padding: 1rem 0.8rem;
   border-width: 0;
   margin: 0;
   margin-right: -1px;
   flex-basis: 100%;
   flex-shrink: 1;
   background-color: transparent;
-  color: #2575e4;
-}
-input::placeholder {
-  color: black;
-  opacity: 1;
 }
 .no {
   border-width: 0;
+  padding: 0 0 2rem 0;
   color: #fa0a0a;
+}
+::placeholder {
+  color: #aaa;
+  opacity: 1;
 }
 </style>
