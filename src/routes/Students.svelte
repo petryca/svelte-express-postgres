@@ -49,13 +49,13 @@
   async function updateStudent(event, id, i) {
     const url = '/api/student/' + id;
     const form = document.getElementById('form');
-    let res;
+    let res, index;
 
     try {
       if(students[i].name === '') {
         res = await fetch(url, {method: 'DELETE'});
         throwError(res);
-        getStudents();
+        index = [...form].indexOf(event.target);
       } else {
         res = await fetch(url, {
           method: 'PATCH',
@@ -65,13 +65,10 @@
           }
         });
         throwError(res);
-        const index = [...form].indexOf(event.target);
-        form.elements[index + 1].focus();
-        getStudents();
+        index = [...form].indexOf(event.target) + 1;
       }
-      setTimeout(() => {
-        document.activeElement.select();
-      }, 100);
+      await getStudents();
+      form.elements[index].select();
     } catch (error) {
       catchError(error);
     }
