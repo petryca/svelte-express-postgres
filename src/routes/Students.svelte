@@ -4,6 +4,7 @@
   let students = [];
   let cache = [];
   let newStudent = '';
+  let hasError = false;
 
   function throwError(response) {
     if (!response.ok) {
@@ -13,6 +14,7 @@
   }
 
   function catchError(error) {
+    hasError = true;
     console.error(error);
     alert('Something went horribly wrong. See browser log.');
   }
@@ -56,18 +58,16 @@
 
       if (students[i].name === '') {
 
-        res = await fetch(url, {method: 'DELETE'});
-        throwError(res);
+        throwError(await fetch(url, {method: 'DELETE'}));
         await getStudents();
 
       } else if (students[i].name !== cache[i].name) {
 
-        res = await fetch(url, {
+        throwError(await fetch(url, {
           method: 'PATCH',
           body: JSON.stringify({name:students[i].name}),
           headers: {'Content-Type': 'application/json'}
-        });
-        throwError(res);
+        }));
         await getStudents();
         currentIndex++;
 
@@ -96,8 +96,8 @@
     {#each students as student, i}
       <li>
         <input type="text" bind:value={student.name} 
-        on:keypress={e => e.key === 'Enter' && updateStudent(e, student.id, i)}
-        on:blur={e => updateStudent(e, student.id, i)}
+          on:keypress={e => e.key === 'Enter' && updateStudent(e, student.id, i)}
+          on:blur={e => !hasError && updateStudent(e, student.id, i)}
         >
         <a href="#/student/{student.id}">View</a>
       </li>
